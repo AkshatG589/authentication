@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const Home = () => {
-  const { authToken, logout, getUser } = useContext(AuthContext);
+  const { logout, getUser } = useContext(AuthContext);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -21,7 +21,7 @@ const Home = () => {
     };
     fetchUser();
     
-  }, [isAuth]);
+  }, [isAuth,getUser]);
 
   const handleLogout = () => {
     toast.success("logged out successfully")

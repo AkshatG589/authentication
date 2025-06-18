@@ -230,3 +230,38 @@ router.post("/verify-reset-otp", [
   }
 });
 module.exports = router;
+
+// 📌 POST /api/auth/resend-otp – resend OTP to unverified users
+router.post(
+  "/resend-otp",
+  [body("email", "Enter a valid email").isEmail()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ success: false, errors: errors.array() });
+
+    const { email } = req.body;
+
+    try {
+      const user = await User.findOne({ email });
+
+      if (!user)
+        return res.status(404).json({ success: false, error: "User not found" });
+
+      const { otp, otpExpiry } = generateOTP();
+      user.otp = otp;
+      user.otpExpiry = otpExpiry;
+      await user.save();
+
+      await sendOTPEmail(email, user.username, otp);
+
+      res.status(200).json({
+        success: true,
+        message: "OTP resent successfully to email.",
+      });
+    } catch (error) {
+      console.error("Resend OTP Error:", error.message);
+      res.status(500).json({ success: false, error: "Server Error" });
+    }
+  }
+);

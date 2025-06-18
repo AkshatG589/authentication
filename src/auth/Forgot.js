@@ -1,27 +1,30 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthContext from "../context/auth/authContext";
 import toast from "react-hot-toast";
 
 const Forgot = () => {
-  const { forgotPassword, verifyResetOtp, resetPassword } = useContext(AuthContext);
+  const { forgotPassword, verifyResetOtp, resetPassword, resendOTP } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [step, setStep] = useState("email"); // 'email' | 'otp' | 'reset'
+  const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [timer, setTimer] = useState(60);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     if (!email) return toast.error("Please enter email");
-    const ToastId = toast.loading("Sending OTP...")
+    const toastId = toast.loading("Sending OTP...");
     const res = await forgotPassword(email);
-    toast.dismiss(ToastId)
+    toast.dismiss(toastId);
     if (res.success) {
-      //toast.success(`OTP sent to ${email}`);
       toast.success(`OTP has been sent to ${email}. Please check your email inbox.`);
       setStep("otp");
+      setResendDisabled(true);
+      setTimer(60);
     } else {
       toast.error(res.error || "Something went wrong!");
     }
@@ -30,9 +33,9 @@ const Forgot = () => {
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
     if (!otp) return toast.error("Enter OTP");
-    const ToastId = toast.loading("verifying OTP")
+    const toastId = toast.loading("Verifying OTP...");
     const res = await verifyResetOtp(email, otp);
-     toast.dismiss(ToastId)
+    toast.dismiss(toastId);
     if (res.success) {
       toast.success("OTP Verified!");
       setStep("reset");
@@ -44,9 +47,9 @@ const Forgot = () => {
   const handleResetSubmit = async (e) => {
     e.preventDefault();
     if (!newPassword) return toast.error("Enter new password");
-    const ToastId = toast.loading("Reseting password")
+    const toastId = toast.loading("Resetting password...");
     const res = await resetPassword(email, newPassword);
-    toast.dismiss(ToastId)
+    toast.dismiss(toastId);
     if (res.success) {
       toast.success("Password reset successful!");
       navigate("/login");
@@ -54,6 +57,38 @@ const Forgot = () => {
       toast.error(res.error || "Failed to reset password");
     }
   };
+
+  const handleResendOTP = async () => {
+    if (!email) return;
+    setResendDisabled(true);
+    setTimer(60);
+    const toastId = toast.loading("Resending OTP...");
+    const res = await resendOTP(email);
+    toast.dismiss(toastId);
+    if (res.success) {
+      toast.success("OTP resent successfully!");
+    } else {
+      toast.error(res.error || "Failed to resend OTP");
+    }
+  };
+
+  // Countdown effect
+  useEffect(() => {
+    let interval;
+    if (resendDisabled) {
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setResendDisabled(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendDisabled]);
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-white">
@@ -74,18 +109,16 @@ const Forgot = () => {
             : handleResetSubmit
         }>
           {step === "email" && (
-            <>
-              <div className="mb-3">
-                <label className="form-label">Email address</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your registered email"
-                />
-              </div>
-            </>
+            <div className="mb-3">
+              <label className="form-label">Email address</label>
+              <input
+                type="email"
+                className="form-control"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your registered email"
+              />
+            </div>
           )}
 
           {step === "otp" && (
@@ -101,22 +134,30 @@ const Forgot = () => {
                   placeholder="Enter OTP"
                 />
               </div>
+              <div className="text-center mb-3">
+                <button
+                  type="button"
+                  className="btn btn-link p-0"
+                  onClick={handleResendOTP}
+                  disabled={resendDisabled}
+                >
+                  {resendDisabled ? `Resend OTP in ${timer}s` : "Resend OTP"}
+                </button>
+              </div>
             </>
           )}
 
           {step === "reset" && (
-            <>
-              <div className="mb-3">
-                <label className="form-label">New Password</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                />
-              </div>
-            </>
+            <div className="mb-3">
+              <label className="form-label">New Password</label>
+              <input
+                type="password"
+                className="form-control"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
           )}
 
           <button type="submit" className="btn btn-primary w-100 mt-2">

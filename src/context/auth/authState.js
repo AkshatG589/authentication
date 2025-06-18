@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import AuthContext from "./authContext";
 
 const AuthState = ({ children }) => {
@@ -8,14 +8,14 @@ const AuthState = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load user info once if token is available
+ /*  
   useEffect(() => {
     if (token) {
       getUser();
     } else {
       setLoading(false);
     }
-  }, [token]);
+  }, [token]);*/
 
   // 📌 Register User
   const register = async (userData) => {
@@ -145,6 +145,24 @@ const verifyResetOtp = async (email, otp) => {
     return { success: false, error: "Network/server error" };
   }
 };
+
+const resendOTP = async (email) => {
+  try {
+    const res = await fetch(`${host}/api/auth/resend-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email })
+    });
+
+    const json = await res.json();
+    return json;
+  } catch (error) {
+    console.error("Resend OTP Error:", error);
+    return { success: false, error: "Network/server error" };
+  }
+};
   return (
     <AuthContext.Provider
       value={{
@@ -159,6 +177,7 @@ const verifyResetOtp = async (email, otp) => {
         forgotPassword,
         resetPassword,
         verifyResetOtp,
+        resendOTP,
       }}
     >
       {children}
