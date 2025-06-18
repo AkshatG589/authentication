@@ -1,5 +1,5 @@
-const connectToMongo = require('./db');
 require("dotenv").config()
+const connectToMongo = require('./db');
 connectToMongo();
 const express = require('express');
 const app = express();
@@ -25,5 +25,5 @@ app.get('/', (req, res) => {
 
 // Start server
 app.listen(port, () => {
-  console.log(`iNotebook backend listening on port ${port}`);
+  console.log(`Authentication backend listening on port ${port}`);
 });

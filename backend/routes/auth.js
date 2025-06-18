@@ -46,6 +46,7 @@ router.post(
       res.status(200).json({
         message: "OTP sent to email (test mode)",
         email: user.email,
+        otp: otp,
         previewURL
       });
     } catch (error) {
@@ -168,6 +169,7 @@ router.post("/forgot-password", [
 
     res.status(200).json({
       message: "Reset OTP sent to email (test mode)",
+      otp: otp,
       previewURL,
     });
   } catch (error) {
