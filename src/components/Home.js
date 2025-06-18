@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import AuthContext from "../context/auth/authContext";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const Home = () => {
   const { authToken, logout, getUser } = useContext(AuthContext);
@@ -23,6 +24,7 @@ const Home = () => {
   }, [isAuth]);
 
   const handleLogout = () => {
+    toast.success("logged out successfully")
     logout();
     navigate("/login");
   };

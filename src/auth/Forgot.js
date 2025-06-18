@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthContext from "../context/auth/authContext";
+import toast from "react-hot-toast";
 
 const Forgot = () => {
   const { forgotPassword, verifyResetOtp, resetPassword } = useContext(AuthContext);
@@ -13,38 +14,44 @@ const Forgot = () => {
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    if (!email) return alert("Please enter email");
+    if (!email) return toast.error("Please enter email");
+    const ToastId = toast.loading("Sending OTP...")
     const res = await forgotPassword(email);
+    toast.dismiss(ToastId)
     if (res.success) {
-      alert(`OTP sent to ${email}`);
-      alert(res.otp)
+      //toast.success(`OTP sent to ${email}`);
+      toast.success(`Your OTP is: ${res.otp} for ${email}`);
       setStep("otp");
     } else {
-      alert(res.error || "Something went wrong!");
+      toast.error(res.error || "Something went wrong!");
     }
   };
 
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
-    if (!otp) return alert("Enter OTP");
+    if (!otp) return toast.error("Enter OTP");
+    const ToastId = toast.loading("verifying OTP")
     const res = await verifyResetOtp(email, otp);
+     toast.dismiss(ToastId)
     if (res.success) {
-      alert("OTP Verified!");
+      toast.success("OTP Verified!");
       setStep("reset");
     } else {
-      alert(res.error || "Invalid OTP");
+      toast.error(res.error || "Invalid OTP");
     }
   };
 
   const handleResetSubmit = async (e) => {
     e.preventDefault();
-    if (!newPassword) return alert("Enter new password");
+    if (!newPassword) return toast.error("Enter new password");
+    const ToastId = toast.loading("Reseting password")
     const res = await resetPassword(email, newPassword);
+    toast.dismiss(ToastId)
     if (res.success) {
-      alert("Password reset successful!");
+      toast.success("Password reset successful!");
       navigate("/login");
     } else {
-      alert(res.error || "Failed to reset password");
+      toast.error(res.error || "Failed to reset password");
     }
   };
 

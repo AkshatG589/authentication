@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthContext from "../context/auth/authContext";
+import toast from "react-hot-toast";
 
 const Register = () => {
   const { register, verifyOTP } = useContext(AuthContext);
@@ -21,25 +22,27 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    alert('loading')
+    const ToastId = toast.loading("Loading...")
     const res = await register(credentials);
+    toast.dismiss(ToastId)
     if (res.otp) {
-      alert(`Your OTP is: ${res.otp}`);
+      toast.success(`Your OTP is: ${res.otp}`);
       setStep("verify");
     } else {
-      alert(res.error || "Registration failed");
+      toast.error(res.error || "Registration failed");
     }
   };
 
   const handleOTPVerify = async (e) => {
     e.preventDefault();
+    const ToastId = toast.loading("Verifying OTP")
     const res = await verifyOTP(credentials.email, otpInput);
-
+    toast.dismiss(ToastId)
     if (res.authToken) {
-      alert("Registration successful!");
+      toast.success(`Registration successful!`);
       navigate("/");
     } else {
-      alert(res.error || "OTP verification failed");
+      toast.error(res.error || "OTP verification failed");
     }
   };
 

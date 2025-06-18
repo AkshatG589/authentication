@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthContext from "../context/auth/authContext";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const { login } = useContext(AuthContext);
@@ -17,12 +18,14 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const ToastId = toast.loading("Loading...")
     const res = await login(credentials.email, credentials.password);
+    toast.dismiss(ToastId)
     if (res.authToken) {
-      alert("Login successful!");
+      toast.success("Login successful!");
       navigate("/");
     } else {
-      alert(res.error || "Login failed");
+      toast.error(res.error || "Login failed");
     }
   };
 

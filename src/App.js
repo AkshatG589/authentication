@@ -10,11 +10,30 @@ import Login from "./auth/Login";
 import Register from "./auth/Register";
 import Forgot from "./auth/Forgot";
 
+import { Toaster } from "react-hot-toast";
+
 function App() {
   return (
     <AuthState>
       <BrowserRouter>
         <div className="container">
+          <Toaster
+            position="top-center" // still required for structure
+            containerStyle={{
+              position: "fixed",
+              top: "40%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 9999,
+            }}
+            toastOptions={{
+              style: {
+                padding: "12px 20px",
+                fontSize: "16px",
+                textAlign: "center",
+              },
+            }}
+          />
           <Routes>
             <Route exact path="/" element={<Home />} />
             <Route exact path="/login" element={<Login />} />
