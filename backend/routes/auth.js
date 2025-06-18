@@ -48,8 +48,6 @@ router.post(
         success: true,
         message: "OTP sent to email (test mode)",
         email: user.email,
-        otp: otp,
-        previewURL
       });
     } catch (error) {
       console.error("Register Error:", error.message);
@@ -172,8 +170,6 @@ router.post("/forgot-password", [
     res.status(200).json({
       success: true,
       message: "Reset OTP sent to email (test mode)",
-      otp: otp,
-      previewURL,
     });
   } catch (error) {
     console.error("Forgot Password Error:", error.message);

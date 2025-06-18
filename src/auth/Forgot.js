@@ -20,7 +20,7 @@ const Forgot = () => {
     toast.dismiss(ToastId)
     if (res.success) {
       //toast.success(`OTP sent to ${email}`);
-      toast.success(`Your OTP is: ${res.otp} for ${email}`);
+      toast.success(`OTP has been sent to ${email}. Please check your email inbox.`);
       setStep("otp");
     } else {
       toast.error(res.error || "Something went wrong!");

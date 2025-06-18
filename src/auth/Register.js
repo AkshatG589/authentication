@@ -25,8 +25,8 @@ const Register = () => {
     const ToastId = toast.loading("Loading...")
     const res = await register(credentials);
     toast.dismiss(ToastId)
-    if (res.otp) {
-      toast.success(`Your OTP is: ${res.otp}`);
+    if (res.success) {
+      toast.success(`OTP has been sent to ${credentials.email}. Please check your email inbox.`);
       setStep("verify");
     } else {
       toast.error(res.error || "Registration failed");
