@@ -15,7 +15,7 @@ const sendOTPEmail = async (email, username, otp) => {
     from: `"Auth App" <${process.env.SMTP_USER}>`,
     to: email,
     subject: "Your OTP Code",
-    text: `Hello ${username}, your OTP is ${otp}. It expires in 10 minutes.`,
+    text: `Hello ${username}, your OTP is ${otp}. It expires in 1 minute.`,
   });
 
   console.log("✅ OTP sent to:", email);
