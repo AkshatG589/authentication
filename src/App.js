@@ -8,6 +8,7 @@ import AuthState from "./context/auth/authState";
 import Home from "./components/Home";
 import Login from "./auth/Login";
 import Register from "./auth/Register";
+import Forgot from "./auth/Forgot";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route exact path="/" element={<Home />} />
             <Route exact path="/login" element={<Login />} />
             <Route exact path="/register" element={<Register />} />
+            <Route exact path="/forgot" element={<Forgot />} />
           </Routes>
         </div>
       </BrowserRouter>

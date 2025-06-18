@@ -27,13 +27,14 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ success: false, errors: errors.array() });
 
     try {
       const { username, email, password } = req.body;
 
       let user = await User.findOne({ $or: [{ email }, { username }] });
-      if (user) return res.status(400).json({ error: "Email or username already exists" });
+      if (user)
+        return res.status(400).json({ success: false, error: "Email or username already exists" });
 
       const hashedPassword = await hashPassword(password);
       const { otp, otpExpiry } = generateOTP();
@@ -44,6 +45,7 @@ router.post(
       const previewURL = await sendOTPEmail(email, username, otp);
 
       res.status(200).json({
+        success: true,
         message: "OTP sent to email (test mode)",
         email: user.email,
         otp: otp,
@@ -51,7 +53,7 @@ router.post(
       });
     } catch (error) {
       console.error("Register Error:", error.message);
-      res.status(500).json({ error: "Server Error" });
+      res.status(500).json({ success: false, error: "Server Error" });
     }
   }
 );
@@ -66,17 +68,17 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ success: false, errors: errors.array() });
 
     const { email, otp } = req.body;
 
     try {
       const user = await User.findOne({ email });
-      if (!user) return res.status(404).json({ error: "User not found" });
-      if (user.verified) return res.status(400).json({ error: "User already verified" });
+      if (!user) return res.status(404).json({ success: false, error: "User not found" });
+      if (user.verified) return res.status(400).json({ success: false, error: "User already verified" });
 
       const valid = validateOTP(otp, user.otp, user.otpExpiry);
-      if (!valid.success) return res.status(400).json({ error: valid.message });
+      if (!valid.success) return res.status(400).json({ success: false, error: valid.message });
 
       user.verified = true;
       user.otp = undefined;
@@ -87,12 +89,13 @@ router.post(
       const authToken = jwt.sign(payload, JWT_SECRET);
 
       res.status(200).json({
+        success: true,
         message: "Account verified successfully",
         authToken
       });
     } catch (error) {
       console.error("Verify Error:", error.message);
-      res.status(500).json({ error: "Server Error" });
+      res.status(500).json({ success: false, error: "Server Error" });
     }
   }
 );
@@ -107,27 +110,27 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ success: false, errors: errors.array() });
 
     const { email, password } = req.body;
 
     try {
       const user = await User.findOne({ email });
-      if (!user) return res.status(400).json({ error: "Invalid email or password" });
+      if (!user) return res.status(400).json({ success: false, error: "Invalid email or password" });
 
       if (!user.verified)
-        return res.status(400).json({ error: "Account not verified. Please verify via OTP." });
+        return res.status(400).json({ success: false, error: "Account not verified. Please verify via OTP." });
 
       const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) return res.status(400).json({ error: "Invalid email or password" });
+      if (!isMatch) return res.status(400).json({ success: false, error: "Invalid email or password" });
 
       const payload = { user: { id: user.id } };
       const authToken = jwt.sign(payload, JWT_SECRET);
 
-      res.status(200).json({ authToken });
+      res.status(200).json({ success: true, authToken });
     } catch (error) {
       console.error("Login Error:", error.message);
-      res.status(500).json({ error: "Server Error" });
+      res.status(500).json({ success: false, error: "Server Error" });
     }
   }
 );
@@ -136,14 +139,13 @@ router.post(
 router.get("/getuser", fetchuser, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ user });
+    if (!user) return res.status(404).json({ success: false, error: "User not found" });
+    res.json({ success: true, user });
   } catch (err) {
     console.error("Get User Error:", err.message);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ success: false, error: "Server Error" });
   }
 });
-
 
 // 📌 POST /api/auth/forgot-password – Request OTP for password reset
 router.post("/forgot-password", [
@@ -151,14 +153,14 @@ router.post("/forgot-password", [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty())
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ success: false, errors: errors.array() });
 
   const { email } = req.body;
 
   try {
     const user = await User.findOne({ email });
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({ success: false, error: "User not found" });
 
     const { otp, otpExpiry } = generateOTP();
     user.otp = otp;
@@ -168,16 +170,16 @@ router.post("/forgot-password", [
     const previewURL = await sendOTPEmail(email, user.username, otp);
 
     res.status(200).json({
+      success: true,
       message: "Reset OTP sent to email (test mode)",
       otp: otp,
       previewURL,
     });
   } catch (error) {
     console.error("Forgot Password Error:", error.message);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ success: false, error: "Server Error" });
   }
 });
-
 
 // 📌 POST /api/auth/reset-password – Use OTP to set a new password
 router.post("/reset-password", [
@@ -186,23 +188,49 @@ router.post("/reset-password", [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty())
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ success: false, errors: errors.array() });
 
   const { email, newPassword } = req.body;
 
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({ success: false, error: "User not found" });
 
-    // 💡 Here you assume OTP was already verified
     user.password = await hashPassword(newPassword);
     await user.save();
 
-    res.status(200).json({ message: "Password reset successfully" });
+    res.status(200).json({ success: true, message: "Password reset successfully" });
 
   } catch (error) {
     console.error("Reset Password Error:", error.message);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ success: false, error: "Server Error" });
+  }
+});
+
+// 📌 POST /api/auth/verify-reset-otp – verify OTP during password reset
+router.post("/verify-reset-otp", [
+  body("email", "Enter a valid email").isEmail(),
+  body("otp", "OTP must be 6 digits").isLength({ min: 6, max: 6 }),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty())
+    return res.status(400).json({ success: false, errors: errors.array() });
+
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, error: "User not found" });
+
+    const valid = validateOTP(otp, user.otp, user.otpExpiry);
+    if (!valid.success)
+      return res.status(400).json({ success: false, error: valid.message });
+
+    // ✅ If OTP valid, just respond with success, don't mark verified
+    res.status(200).json({ success: true, message: "OTP verified successfully" });
+  } catch (error) {
+    console.error("Verify Reset OTP Error:", error.message);
+    res.status(500).json({ success: false, error: "Server Error" });
   }
 });
 module.exports = router;

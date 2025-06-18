@@ -127,7 +127,24 @@ const AuthState = ({ children }) => {
 
     return await res.json();
   };
+  // 📌 Pseudocode for verifying OTP during forgot password
+const verifyResetOtp = async (email, otp) => {
+  try {
+    const res = await fetch(`${host}/api/auth/verify-reset-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, otp })
+    });
 
+    const json = await res.json();
+    return json;
+  } catch (error) {
+    console.error("Verify Reset OTP Error:", error);
+    return { success: false, error: "Network/server error" };
+  }
+};
   return (
     <AuthContext.Provider
       value={{
@@ -141,6 +158,7 @@ const AuthState = ({ children }) => {
         getUser,
         forgotPassword,
         resetPassword,
+        verifyResetOtp,
       }}
     >
       {children}
